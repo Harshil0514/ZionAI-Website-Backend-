@@ -6,17 +6,15 @@ from supabase import create_client, Client
 app = FastAPI(
     title="Zion AI Core API",
     description="Institutional Risk Gateway Engine backend processing portal.",
-    version="1.0.0"
+    version="1.1.0"
 )
 
 # -------------------------------------------------------------------------
 # CORS SECURITY INTERFACE CONFIGURATION
 # -------------------------------------------------------------------------
-# This enables your website hosted on GitHub Pages/Vercel to securely 
-# communicate with this backend API on Render.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace ["*"] with ["https://zionai.in.net"] for strict access
+    allow_origins=["*"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -42,7 +40,7 @@ def read_root():
     """
     Heartbeat connection check root node.
     """
-    return {"status": "online", "engine": "Zion AI Imperium Node v1.0.0"}
+    return {"status": "online", "engine": "Zion AI Imperium Node v1.1.0"}
 
 @app.post("/manual-signup")
 async def manual_signup(
@@ -58,7 +56,7 @@ async def manual_signup(
         # Construct the database entity dictionary model
         payload = {
             "email": email.strip().lower(),
-            "password_hash": password,  # For production scale, run this through bcrypt.hash()
+            "password_hash": password,  
             "transaction_remark_id": remark_id.strip(),
             "status": "pending_verification"
         }
@@ -77,8 +75,46 @@ async def manual_signup(
             raise HTTPException(status_code=400, detail="Database rejected resource layout commit map parameters.")
             
     except Exception as e:
-        # Handle duplicate account entries or collision errors elegantly
         error_msg = str(e)
         if "duplicate key value" in error_msg:
             raise HTTPException(status_code=409, detail="This corporate email or transaction token reference is already active.")
         raise HTTPException(status_code=500, detail=f"Internal Gateway Error: {error_msg}")
+
+@app.post("/verify-login")
+async def verify_login(
+    email: str = Form(...), 
+    password: str = Form(...)
+):
+    """
+    Validates user credentials and verifies whether administration has upgraded account state to active.
+    """
+    try:
+        clean_email = email.strip().lower()
+        
+        # Search the database for the user row
+        response = supabase.table("subscriptions").select("*").eq("email", clean_email).execute()
+        
+        if not response.data or len(response.data) == 0:
+            raise HTTPException(status_code=401, detail="No profile matching this email address was found.")
+            
+        user_record = response.data[0]
+        
+        # Verify master password parameter alignment
+        if user_record.get("password_hash") != password:
+            raise HTTPException(status_code=401, detail="Access Denied: Invalid credential profiles.")
+            
+        # Analyze current deployment clearance status
+        current_status = user_record.get("status")
+        
+        if current_status == "active":
+            return {"status": "approved", "message": "Access clearing authorized."}
+        else:
+            return {
+                "status": "pending", 
+                "detail": "Account clearance pending. Manual transaction audit loops take 5 to 6 hours. Check back shortly."
+            }
+            
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal Validation Fault: {str(e)}")
