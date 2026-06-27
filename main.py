@@ -10,7 +10,7 @@ from supabase import create_client, Client
 app = FastAPI(
     title="Zion AI Core API",
     description="Institutional Risk Gateway Engine backend processing portal with automated subscription expiration controls.",
-    version="1.2.0"
+    version="1.2.0",
     redirect_slashes = False
 )
 
