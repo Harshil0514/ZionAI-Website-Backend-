@@ -35,7 +35,8 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SENDER_EMAIL = os.getenv("SENDER_EMAIL", "zionai3636@gmail.com")
-SENDER_PASSWORD = os.getenv("SENDER_PASSWORD", "xxxx xxxx xxxx xxxx") # Secure 16-character App Password
+SENDER_PASSWORD = os.getenv("SENDER_PASSWORD", "jrdo odow duwq wvlz") # Secure 16-character App Password
+
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise RuntimeError("CRITICAL ERROR: Supabase environment credentials missing or invalid.")
