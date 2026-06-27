@@ -248,7 +248,8 @@ async def verify_login(
 # -------------------------------------------------------------------------
 # CHRONO-AUTOMATION DAEMON ENDPOINT
 # -------------------------------------------------------------------------
-@app.post("/check-subscriptions")
+# Change this decorator line from @app.post to @app.get
+@app.get("/check-subscriptions")
 async def check_subscriptions(background_tasks: BackgroundTasks):
     """
     Cron endpoint designed to run once daily. It auto-expires over-due accounts
@@ -258,12 +259,12 @@ async def check_subscriptions(background_tasks: BackgroundTasks):
         now = datetime.now(timezone.utc)
         warning_window = now + timedelta(days=3)
         
-        # 1. Automatic Cleanup Query: Instantly terminate profiles past expiration
+        # 1. Automatic Cleanup
         expired_query = supabase.table("subscriptions").select("email").eq("status", "active").lt("expires_at", now.isoformat()).execute()
         for rec in expired_query.data:
             supabase.table("subscriptions").update({"status": "expired"}).eq("email", rec["email"]).execute()
             
-        # 2. Advanced Reminder Query: Find accounts expiring within the next 3 days
+        # 2. Warning Reminders
         upcoming_expiry_query = supabase.table("subscriptions").select("email", "expires_at").eq("status", "active").gt("expires_at", now.isoformat()).lt("expires_at", warning_window.isoformat()).execute()
         
         emails_warned = 0
@@ -279,4 +280,4 @@ async def check_subscriptions(background_tasks: BackgroundTasks):
             "warnings_dispatched": emails_warned
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Automation Cron Error: {str(e)}")
+        return {"status": "error", "detail": f"Automation Cron Error: {str(e)}"}
