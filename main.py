@@ -173,8 +173,12 @@ def send_expiry_warning_email(client_email: str, days_left: int) -> bool:
 # -------------------------------------------------------------------------
 # API APPLICATION ROUTING ENDPOINTS
 # -------------------------------------------------------------------------
-@app.get("/")
-def read_root():
+@app.route("/", methods=["GET", "HEAD"])
+async def read_root(request):
+    """
+    Root gateway endpoint handling both browser GET requests and 
+    automated uptime health monitor HEAD handshakes cleanly.
+    """
     return {"status": "online", "engine": "Zion AI Imperium Node v1.2.0"}
 
 @app.post("/manual-signup")
